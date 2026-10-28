@@ -16,22 +16,19 @@
 \newtheorem{corollary}{Corollary}
 \newtheorem{remark}{Remark}
 
-\input{macros_metrics.tex}
 \begin{document}
+\input{macros_metrics.tex}
 
 \title{Provably Resilient Synchrophasor State Estimation Under Coordinated Majority GPS Spoofing, Load Transients, and Substation Cyber-Physical Attacks}
 
-\author{Mohd Aarish Shaheen and S.~A.~Soman%
-\thanks{Mohd Aarish Shaheen is with the Department of Electrical Engineering, University of Kashmir (UoK), Srinagar, and the Indian Institute of Technology Bombay (IITB), Mumbai. (e-mail: aarishshaheen@uok.edu.in)}%
-\thanks{S. A. Soman is with the Department of Electrical Engineering, Indian Institute of Technology Bombay (IITB), Mumbai.}}
-
-%
-{SHAHEEN: PROVABLY RESILIENT SYNCHROPHASOR STATE ESTIMATION UNDER COORDINATED MAJORITY GPS SPOOFING}
+\author{Mohd~Aarish~Shaheen and S.~A.~Soman%
+\thanks{M.~A.~Shaheen is with the Department of Electrical Engineering, University of Kashmir (UoK), Srinagar, and the Indian Institute of Technology Bombay (IITB), Mumbai (e-mail: aarishshaheen@uok.edu.in).}%
+\thanks{S.~A.~Soman is with the Department of Electrical Engineering, Indian Institute of Technology Bombay (IITB), Mumbai.}}
 
 \maketitle
 
 \begin{abstract}
-Phasor Measurement Unit (PMU) state estimation executes at millisecond granularity in modern Wide-Area Monitoring, Protection, and Control (WAMPAC) centers. Because PMUs derive their phase angle reference from civilian Global Positioning System (GPS) 1-Pulse-Per-Second (1-PPS) timing strobes, they are acutely vulnerable to GPS Spoofing Attacks (GSAs). Recent hybrid architectures---most notably Badugu \emph{et al.} (2026)---achieve spoofing invariance by switching from complex Linear State Estimation (LSE) to a scalar Nonlinear Least Squares (NLS) solver triggered by a subspace Principal Angle (PA) test, recovering the Coordinated Universal Time (UTC) reference frame via one-dimensional (1D) DBSCAN clustering. This paper proves that such memoryless scalar-clustering architectures exhibit four structural failure modes: (i) an 80~ms (4-cycle) protection blind spot during persistence counter accumulation; (ii) reference-frame hijacking and chordal error amplification whenever $\ge 50\%$ of installed PMUs undergo a coordinated spoofing attack; (iii) zero statistical breakdown under simultaneous False Data Injection Attacks (FDIAs) or Analog-to-Digital Converter (ADC) channel corruptions; and (iv) $\mathcal{O}(m N_b^2)$ dense Jacobian and $\mathcal{O}(|\mathcal{P}|^2)$ spatial clustering overhead. To overcome these limitations, we formulate a Zero-Allocation, Fused Multi-Dimensional Robust Dynamic State Estimation (DSE) architecture. By integrating a sparse $\mathcal{O}(\mathrm{nnz}(R))$ Principal Angle screen, an $\mathcal{O}(m)$ 4-node graph-accumulated Huber M-estimator with in-place column-active sparse Symmetric Positive-Definite (SPD) Cholesky factorization, a 6-Dimensional Physical-Invariance Feature Manifold anchored to Center-of-Inertia (COI) swing dynamics, and an $\mathcal{O}(|\mathcal{P}|\log|\mathcal{P}|)$ order-statistic sort-clustering kernel, our estimator guarantees immunity even under $70\%$ coordinated majority spoofing coinciding with sudden $+18\%$ load steps and simultaneous FDIA/ADC faults. Validated on canonical MATPOWER IEEE 30-bus (13~PMUs) and IEEE 118-bus (54~PMUs) networks across \NumCaseStudies{} comprehensive case studies, the proposed estimator maintains $\le 0.18\%$ Maximum Total Vector Error (TVE) across all attack regimes while executing in $0.030\text{--}0.362\text{~ms}$ on IEEE 30-bus and $0.047\text{--}5.865\text{~ms}$ on IEEE 118-bus---well within the 20~ms IEEE C37.118.1 real-time window.
+Phasor Measurement Unit (PMU) state estimation executes at millisecond granularity in modern Wide-Area Monitoring, Protection, and Control (WAMPAC) centers. Because PMUs derive their phase angle reference from civilian Global Positioning System (GPS) 1-Pulse-Per-Second (1-PPS) timing strobes, they are acutely vulnerable to GPS Spoofing Attacks (GSAs). Recent hybrid architectures---most notably Badugu \emph{et al.} (2026)---achieve spoofing invariance by switching from complex Linear State Estimation (LSE) to a scalar Nonlinear Least Squares (NLS) solver triggered by a subspace Principal Angle (PA) test, recovering the Coordinated Universal Time (UTC) reference frame via one-dimensional (1D) DBSCAN clustering. This paper proves that such memoryless scalar-clustering architectures exhibit four structural failure modes: (i) an 80~ms (4-cycle) protection blind spot during persistence counter accumulation; (ii) reference-frame hijacking and chordal error amplification whenever $\ge 50\%$ of installed PMUs undergo a coordinated spoofing attack; (iii) zero statistical breakdown under simultaneous False Data Injection Attacks (FDIAs) or Analog-to-Digital Converter (ADC) channel corruptions; and (iv) $\mathcal{O}(m N_b^2)$ dense Jacobian and $\mathcal{O}(|\mathcal{P}|^2)$ spatial clustering overhead. To overcome these limitations, we formulate a Zero-Allocation, Fused Multi-Dimensional Robust Dynamic State Estimation (DSE) architecture. By integrating a sparse $\mathcal{O}(\mathrm{nnz}(R))$ Principal Angle screen, an $\mathcal{O}(m)$ 4-node graph-accumulated Huber M-estimator with in-place column-active sparse Symmetric Positive-Definite (SPD) Cholesky factorization, a 6-Dimensional Physical-Invariance Feature Manifold anchored to Center-of-Inertia (COI) swing dynamics, and an $\mathcal{O}(|\mathcal{P}|\log|\mathcal{P}|)$ order-statistic sort-clustering kernel, our estimator guarantees immunity even under $70\%$ coordinated majority spoofing coinciding with sudden $+18\%$ load steps and simultaneous FDIA/ADC faults. Validated on canonical MATPOWER IEEE 30-bus (13~PMUs) and IEEE 118-bus (54~PMUs) networks across seven comprehensive case studies, the proposed estimator maintains $\le 0.18\%$ Maximum Total Vector Error (TVE) across all attack regimes while executing in $0.030\text{--}0.362\text{ ms}$ on IEEE 30-bus and $0.047\text{--}5.865\text{ ms}$ on IEEE 118-bus---well within the 20~ms IEEE C37.118.1 real-time window.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -75,7 +72,7 @@ Due to the high electrical stiffness ($V_i V_j / X_{ij}$) of extra-high-voltage 
 \footnotesize
 \caption{Taxonomy of Global Numerical Linear Algebra (NLA) and Robust Synchrophasor State Estimation Frameworks}
 \label{tab:taxonomy}
-\resizebox{\columnwidth}{!}{\begin{tabular}{p{3.6cm}p{5.2cm}p{8.0cm}}
+\begin{tabular}{p{3.6cm}p{5.2cm}p{8.0cm}}
 \toprule
 \textbf{Research Group / Paradigm} & \textbf{Core Mathematical Mechanism} & \textbf{Capabilities and Limitations Relative to Proposed Framework} \\
 \midrule
@@ -91,7 +88,7 @@ Due to the high electrical stiffness ($V_i V_j / X_{ij}$) of extra-high-voltage 
 \addlinespace[2pt]
 \textbf{Northeastern, ETH Zurich \& Tsinghua} (Abur, Hug \emph{et al.} \cite{abur2004power,gol2014lav,huber1981robust}) & Least Absolute Value (LAV) linear programming, Huber M-estimation, and semidefinite convex relaxations. & High statistical breakdown point against gross leverage outliers; lacks closed-form UTC reference restoration under majority clock spoofing. \\
 \bottomrule
-\end{tabular}}
+\end{tabular}
 \end{table*}
 
 Recently, Badugu, Navalkar, and Soman \cite{badugu2026synchrophasor} proposed a hybrid estimator that monitors the subspace Principal Angle (PA) \cite{raju2023mitigation,golub1996matrix} of the complex measurement vector and switches from complex Linear State Estimation (LSE) \cite{phadke1986state} to a scalar Nonlinear Least Squares (NLS) estimator \cite{pandian1999towards} using spoofing-invariant quantities $(|V_i|, P_{ij}, Q_{ij})$, subsequently restoring the global UTC phase reference $\Delta$ via 1D DBSCAN clustering \cite{ester1996density}. While representing an important milestone, we prove in this paper that memoryless scalar NLS + 1D DBSCAN architectures suffer from four fundamental vulnerabilities:
@@ -106,9 +103,9 @@ The primary contributions of this paper are fivefold:
 \begin{itemize}
     \item \textbf{Analytical Proofs of Failure Modes}: We prove the Chordal TVE Amplification Theorem under majority spoofing (Proposition~2), the exact isomorphism between 1D DBSCAN and $\mathcal{O}(N_p \log N_p)$ order-statistic gap thresholding (Proposition~3), and the bilinear cross-coupling breakdown of scalar flows under simultaneous FDIA/ADC faults.
     \item \textbf{Sparse $\mathcal{O}(\mathrm{nnz}(R))$ Subspace Screening}: We eliminate the dense $m \times N_b$ unitary factor $Q$ in the Principal Angle test, computing both $\theta_{\mathrm{PA}}$ and $\hat{v}^{\mathrm{LSE}}$ in strictly $\mathcal{O}(\mathrm{nnz}(H) + \mathrm{nnz}(R))$ operations.
-    \item \textbf{$\mathcal{O}(m)$ 4-Node Graph-Accumulated Huber Cholesky Solver}: We replace dense $\mathcal{O}(m_s N_b^2)$ Jacobian multiplication with direct 4-node rank-2 symmetric scattering into an in-place column-active sparse SPD Cholesky solver weighted by a Huber IRLS influence function.
+    \item \textbf{$\mathcal{O}(m)$ 4-Node Graph-Accumulated Huber Cholesky Solver}: We replace dense $\mathcal{O}(m_s N_b^2)$ Jacobian multiplication with direct 4-node rank-2 symmetric scattering into an in-place column-active sparse Symmetric Positive-Definite (SPD) Cholesky factorization, weighted by a Huber IRLS influence function.
     \item \textbf{Slack-Anchored 6D Physical-Invariance Manifold}: We formulate a 6-dimensional invariance feature vector anchored to the physical synchronous slack generator and Center-of-Inertia (COI) swing dynamics, paired with an underflow-stabilized Mahalanobis trust kernel that survives $70\%\text{--}90\%$ coordinated majority spoofing during $+18\%$ load steps.
-    \item \textbf{Hierarchical Continental-Scale Real-Time Architecture}: We detail the 3-tier substation-to-Super-PDC deployment architecture and validate the fused `@njit` kernels across seven comprehensive case studies on canonical MATPOWER IEEE 30-bus and 118-bus grids.
+    \item \textbf{Hierarchical Continental-Scale Real-Time Architecture}: We detail the 3-tier substation-to-Super-PDC deployment architecture and validate the fused \texttt{@njit} kernels across seven comprehensive case studies on canonical MATPOWER IEEE 30-bus and 118-bus grids.
 \end{itemize}
 
 \section{Related Work and Global NLA Landscape}
@@ -332,7 +329,7 @@ w_{k,t}^{\mathrm{trust}} = \exp\left(-\frac{1}{2}\left(d_{M,k}^2 - d_{M,\min}^2\
 \footnotesize
 \caption{Algorithm 1: Online Zero-Allocation Fused 6D Robust DSE Step}
 \label{tab:algo1}
-\resizebox{\columnwidth}{!}{\begin{tabular}{p{8.3cm}}
+\begin{tabular}{p{8.3cm}}
 \toprule
 \textbf{Input:} Phasor snapshot $z_t \in \mathbb{C}^m$, frequency/ROCOF $(f_t^{\mathrm{PMU}}, \mathrm{ROCOF}_t^{\mathrm{PMU}})$, sparse CSR factors $(H^H W^{-1}, R^H, R)$, historical state $(\hat{v}_{t-1}^{\mathrm{clean}}, \hat{f}_{t-1}^{\mathrm{clean}})$. \\
 \textbf{Output:} UTC-aligned state $\hat{v}_t^{\mathrm{aligned}} \in \mathbb{C}^{N_b}$, spoofing vector $\hat{\psi}_t \in \mathbb{R}^{N_p}$. \\
@@ -354,7 +351,7 @@ w_{k,t}^{\mathrm{trust}} = \exp\left(-\frac{1}{2}\left(d_{M,k}^2 - d_{M,\min}^2\
 15: Select $c^* = \arg\max_c \sum_{k \in C_c} w_{k,t}^{\mathrm{trust}}$; compute $\hat{\Delta}_t$ as weighted median on $C_{c^*}$. \\
 16: Align $\hat{v}_t^{\mathrm{aligned}} \gets \hat{v}_t^{\mathrm{rob}}e^{j\hat{\Delta}_t}$; set $\hat{\psi}_{k,t} = \mathrm{wrap}(\delta_{\mathrm{diff},k} - \hat{\Delta}_t)$ for $k \notin C_{c^*}$ with $r_{k,t}^{\mathrm{ADC}} < 0.05$ (orthogonally masking FDIA/ADC buses). \\
 \bottomrule
-\end{tabular}}
+\end{tabular}
 \end{table}
 
 Table~\ref{tab:algo1} details the complete online execution pipeline of the proposed estimator.
@@ -379,14 +376,14 @@ In continental interconnections (e.g., $N_b = 10,000$ buses, $N_p = 3,000$ PMUs)
 \footnotesize
 \caption{Canonical MATPOWER Network Topology, Observability Verification, and Sparse Factor Characteristics}
 \label{tab:topology}
-\resizebox{\columnwidth}{!}{\begin{tabular}{lccccccccc}
+\begin{tabular}{lccccccccc}
 \toprule
 \textbf{Test System} & \textbf{Buses ($N_b$)} & \textbf{Branches ($N_l$)} & \textbf{Slack Bus ($s_{\mathrm{ref}}$)} & \textbf{PMUs ($N_p$)} & \textbf{Phasors ($m$)} & \textbf{Observability $\mathrm{rank}(H)$} & \textbf{$G_{\mathrm{red}}$ Components} & \textbf{Sparse $\mathrm{nnz}(R) / N_b^2$} & \textbf{PA Threshold ($\rho_{\mathrm{PA}}$)} \\
 \midrule
 \textbf{IEEE 30-Bus} (\texttt{case\_ieee30}) & 30 & 41 & Bus 1 (Idx 0) & 13 & 58 & $30 / 30$ (Full) & 1 (Connected) & $151 / 900$ ($16.8\%$) & $0.1443^\circ$ \\
 \textbf{IEEE 118-Bus} (\texttt{case118}) & 118 & 186 & Bus 69 (Idx 68) & 54 & 276 & $118 / 118$ (Full) & 1 (Connected) & $997 / 13,924$ ($7.2\%$) & $0.1107^\circ$ \\
 \bottomrule
-\end{tabular}}
+\end{tabular}
 \end{table*}
 
 \section{Experimental Evaluation and Case Studies}
@@ -408,7 +405,7 @@ All estimators are compiled to native LLVM machine code via Numba \texttt{@njit(
 \footnotesize
 \caption{Comparative Performance Across Five Dynamic Regimes on Canonical IEEE 30-Bus and IEEE 118-Bus Systems}
 \label{tab:main_results}
-\resizebox{\columnwidth}{!}{\begin{tabular}{lcccccccc}
+\begin{tabular}{lcccccccc}
 \toprule
 & \multicolumn{4}{c}{\textbf{Canonical IEEE 30-Bus System ($N_p = 13, m = 58$)}} & \multicolumn{4}{c}{\textbf{Canonical IEEE 118-Bus System ($N_p = 54, m = 276$)}} \\
 \cmidrule(lr){2-5} \cmidrule(lr){6-9}
@@ -420,7 +417,7 @@ All estimators are compiled to native LLVM machine code via Numba \texttt{@njit(
 \textbf{R4: Simultaneous GSA + FDIA/ADC} & $8.490\%$ & $7.303\%$ & $\mathbf{0.180\%}$ & $\mathbf{0.0544^\circ}$ & $3.108\%$ & $1.614\%$ & $\mathbf{0.112\%}$ & $\mathbf{0.0763^\circ}$ \\
 \textbf{R5: Slow Ramp Meaconing GSA} & $1.165\%$ & $0.130\%$ & $\mathbf{0.130\%}$ & $\mathbf{0.0655^\circ}$ & $0.405\%$ & $0.074\%$ & $\mathbf{0.095\%}$ & $\mathbf{0.0713^\circ}$ \\
 \bottomrule
-\end{tabular}}
+\end{tabular}
 \end{table*}
 
 \subsection{Case Study A: Multi-Regime Trajectory and Sub-Degree GSA Analysis}
@@ -456,7 +453,7 @@ In Regime~4 ($3.0\text{--}4.0\text{~s}$), simultaneous $+5.0^\circ$ spoofing on 
 \caption{Detection and Mitigation of Stealthy Column-Space FDIA ($a_t = H c_t$) Combined with GSA on IEEE 30-Bus System}
 \label{tab:stealthy_fdia}
 \resizebox{\columnwidth}{!}{%
-\resizebox{\columnwidth}{!}{\begin{tabular}{lccccc}
+\begin{tabular}{lccccc}
 \toprule
 \textbf{Attack Scenario} & \textbf{$\theta_{\mathrm{PA}}$ (deg)} & \textbf{$\max |r^{\mathrm{kin}-\delta}|$} & \textbf{LSE TVE} & \textbf{Badugu \cite{badugu2026synchrophasor}} & \textbf{Proposed TVE} \\
 \midrule
@@ -464,7 +461,7 @@ No Attack Baseline & $0.113^\circ$ & $0.042^\circ$ & $0.114\%$ & $0.114\%$ & $\m
 Stealthy FDIA ($a_t = H c_t$) & $0.109^\circ$ & $4.850^\circ$ & $5.140\%$ & $5.140\%$ & $\mathbf{0.162\%}$ \\
 Stealthy FDIA + $+5^\circ$ GSA & $1.624^\circ$ & $5.020^\circ$ & $8.920\%$ & $5.150\%$ & $\mathbf{0.185\%}$ \\
 \bottomrule
-\end{tabular}}%
+\end{tabular}%
 }
 \end{table}
 
@@ -474,14 +471,14 @@ Stealthy FDIA + $+5^\circ$ GSA & $1.624^\circ$ & $5.020^\circ$ & $8.920\%$ & $5.
 \caption{Per-Snapshot Execution Latency Comparison (Milliseconds)}
 \label{tab:latency}
 \resizebox{\columnwidth}{!}{%
-\resizebox{\columnwidth}{!}{\begin{tabular}{lccccc}
+\begin{tabular}{lccccc}
 \toprule
 \textbf{Test Grid} & \textbf{RSDMC \cite{chauhan2021synchrophasor}} & \textbf{SECF \cite{desilva2021pmu}} & \textbf{Badugu \cite{badugu2026synchrophasor}} & \textbf{Prop. (Attack)} & \textbf{Prop. (Clean)} \\
 \midrule
 \textbf{IEEE 30-Bus} & $4.14\text{--}11.57$ & $0.05\text{--}1.16$ & $0.53\text{--}2.33$ & $\mathbf{0.3616}$ & $\mathbf{0.0298}$ \\
 \textbf{IEEE 118-Bus} & $77.5\text{--}301.4$ & $1389\text{--}1738$ & $6.14\text{--}7.37$ & $\mathbf{5.8649}$ & $\mathbf{0.0473}$ \\
 \bottomrule
-\end{tabular}}%
+\end{tabular}%
 }
 \end{table}
 
@@ -489,10 +486,10 @@ Stealthy FDIA + $+5^\circ$ GSA & $1.624^\circ$ & $5.020^\circ$ & $8.920\%$ & $5.
 As noted in Section~VIII-G of \cite{badugu2026synchrophasor}, a stealthy spatial FDIA constructed as $a_t = H c_t$ lies strictly within $\mathrm{Range}(H)$, leaving the single-snapshot Principal Angle $\theta_{\mathrm{PA}} = 0.109^\circ < \rho_{\mathrm{PA}}$ unperturbed so that Badugu \emph{et al.} remains on the corrupted LSE path ($\mathrm{TVE} = 5.14\%$, Table~\ref{tab:stealthy_fdia}). Because our Stage~1 dual trigger monitors the kinematic innovation $\max_k |\Delta\theta_{k,t}^{\mathrm{kin}}| = 4.85^\circ > 0.35^\circ$ alongside $r_{k,t}^{\mathrm{ADC}}$ and $r_{k,t}^{\mathrm{DSP}-f}$, it immediately flags the unphysical state jump and restores the state via DSE prior substitution and Huber IRLS ($\mathrm{TVE} = 0.162\%$).
 
 \subsection{Case Study E: Computational Complexity and Real-Time Latency}
-Table~\ref{tab:latency} compares median execution times against RSDMC \cite{chauhan2021synchrophasor}, SECF \cite{desilva2021pmu}, and Badugu \emph{et al.} \cite{badugu2026synchrophasor}. On unattacked snapshots, our sparse $\mathcal{O}(\mathrm{nnz}(R))$ kernel executes in $29.8\,\mu\text{s}$ (IEEE 30-bus) and $47.3\,\mu\text{s}$ (IEEE 118-bus). On attacked snapshots, the fused $\mathcal{O}(m)$ Huber Cholesky solver completes in $0.3616\text{~ms}$ (IEEE 30-bus) and $5.8649\text{~ms}$ (IEEE 118-bus)---nearly $300\times$ faster than SECF and well inside the $20\text{~ms}$ C37.118.1 deadline.
+Table~\ref{tab:latency} compares median execution times against RSDMC \cite{chauhan2021synchrophasor}, SECF \cite{desilva2021pmu}, and Badugu \emph{et al.} \cite{badugu2026synchrophasor}. On unattacked snapshots, our sparse $\mathcal{O}(\mathrm{nnz}(R))$ kernel executes in $29.8\,\mu\text{s}$ (IEEE 30-bus) and $47.3\,\mu\text{s}$ (IEEE 118-bus). On attacked snapshots, the fused $\mathcal{O}(m)$ Huber Cholesky solver completes in $0.3616\text{ ms}$ (IEEE 30-bus) and $5.8649\text{ ms}$ (IEEE 118-bus)---nearly $300\times$ faster than SECF and well inside the $20\text{ ms}$ C37.118.1 deadline.
 
 \section{Conclusion}
-This paper established a provably resilient, zero-allocation synchrophasor state estimation framework that eliminates the $80\text{~ms}$ counter blind spot, $\ge 50\%$ majority spoofing hijack, and $\ell_2$ FDIA breakdown of existing scalar-clustering estimators. By uniting sparse $\mathcal{O}(\mathrm{nnz}(R))$ Principal Angle screening, $\mathcal{O}(m)$ 4-node graph-accumulated Huber IRLS with column-active sparse SPD Cholesky factorization, a slack-anchored 6D physical-invariance manifold, and $\mathcal{O}(N_p \log N_p)$ order-statistic sort-clustering, the proposed architecture guarantees sub-$0.18\%$ Maximum TVE across all operational and cyber-physical attack regimes at C/Fortran hardware speeds.
+This paper established a provably resilient, zero-allocation synchrophasor state estimation framework that eliminates the $80\text{ ms}$ counter blind spot, $\ge 50\%$ majority spoofing hijack, and $\ell_2$ FDIA breakdown of existing scalar-clustering estimators. By uniting sparse $\mathcal{O}(\mathrm{nnz}(R))$ Principal Angle screening, $\mathcal{O}(m)$ 4-node graph-accumulated Huber IRLS with column-active sparse SPD Cholesky factorization, a slack-anchored 6D physical-invariance manifold, and $\mathcal{O}(N_p \log N_p)$ order-statistic sort-clustering, the proposed architecture guarantees sub-$0.18\%$ Maximum TVE across all operational and cyber-physical attack regimes at C/Fortran hardware speeds.
 
 \appendix[Sparse Normal-Matrix Hessian Structure]
 Let $\mathcal{E}_{\mathrm{PMU}}$ denote the set of branches incident to all PMUs $k \in \mathcal{P}$. Because each branch $e = (i, j) \in \mathcal{E}_{\mathrm{PMU}}$ couples only state indices $\mathcal{I}_e = \{\theta_i, \theta_j, |V_i|, |V_j|\}$, the normal matrix $G = J^T W_{\mathrm{IRLS}} J \in \mathbb{R}^{(2N_b-1)\times(2N_b-1)}$ is a $2 \times 2$ block matrix whose off-diagonal sparsity pattern is strictly contained within the adjacency graph $A$. Consequently, the number of operations required to assemble $G$ via (\ref{eq:rank2_scatter}) is bounded by $16 N_i + N_p = \mathcal{O}(m)$, independent of $N_b^2$.

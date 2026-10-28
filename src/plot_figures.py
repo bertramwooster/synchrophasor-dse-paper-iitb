@@ -18,7 +18,7 @@ def build_all_figures(npz_path="data/benchmark_results.npz", outdir="tex", forma
     out_path = Path(outdir)
     data = np.load(npz_path)
     t_sec = data["t_sec"]
-    
+
     plt.rcParams.update({
         "font.family": "serif", "font.size": 9, "axes.labelsize": 9,
         "legend.fontsize": 8, "pdf.fonttype": 42, "ps.fonttype": 42
@@ -34,7 +34,7 @@ def build_all_figures(npz_path="data/benchmark_results.npz", outdir="tex", forma
         ax.barh(0, dur, left=s_t, height=0.4, color=C(col), edgecolor="black")
         ax.text(s_t + 0.5 * dur, y_off, st, ha="center", va="center", fontsize=7.5, fontweight="bold")
         ax.plot([s_t + 0.5 * dur, s_t + 0.5 * dur], [0.2 * np.sign(y_off), y_off - 0.15 * np.sign(y_off)], "k-", lw=0.5)
-    
+
     ax.axvline(20.0, color=C("red"), ls="--", lw=1.5)
     ax.text(19.8, 0.0, "20.0 ms IEEE C37.118.1 Limit", ha="right", va="center", color=C("red"), fontweight="bold")
     ax.set_xlim(0, 21.0)
@@ -76,7 +76,7 @@ def build_all_figures(npz_path="data/benchmark_results.npz", outdir="tex", forma
     axes[0].set_ylabel(r"Trust $w_{k,t}^{\mathrm{trust}}$")
     axes[0].grid(True, ls=":", alpha=0.6)
     axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2)
-    
+
     axes[1].plot(t_sec, np.linspace(0.18, 0.68, 250), color=C("tab:purple"), label="IEEE 30 PA")
     axes[1].plot(t_sec, np.linspace(0.13, 0.44, 250), color=C("tab:cyan"), label="IEEE 118 PA")
     axes[1].set_yscale("log")
