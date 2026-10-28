@@ -21,11 +21,11 @@
 
 \title{Provably Resilient Synchrophasor State Estimation Under Coordinated Majority GPS Spoofing, Load Transients, and Substation Cyber-Physical Attacks}
 
-\author{Mohd~Aarish~Shaheen%
-\thanks{Manuscript received October 2026.}%
-\thanks{M.~A.~Shaheen is with the Department of Electrical Engineering, Institute of Technology, University of Kashmir, Zakura Campus, Srinagar 190006, India (e-mail: aarish@uok.edu.in).}}
+\author{Mohd Aarish Shaheen and S.~A.~Soman%
+\thanks{Mohd Aarish Shaheen is with the Department of Electrical Engineering, University of Kashmir (UoK), Srinagar, and the Indian Institute of Technology Bombay (IITB), Mumbai. (e-mail: aarishshaheen@uok.edu.in)}%
+\thanks{S. A. Soman is with the Department of Electrical Engineering, Indian Institute of Technology Bombay (IITB), Mumbai.}}
 
-\markboth{IEEE TRANSACTIONS ON INDUSTRIAL CYBER-PHYSICAL SYSTEMS,~VOL.~4,~2026}%
+%
 {SHAHEEN: PROVABLY RESILIENT SYNCHROPHASOR STATE ESTIMATION UNDER COORDINATED MAJORITY GPS SPOOFING}
 
 \maketitle
@@ -75,7 +75,7 @@ Due to the high electrical stiffness ($V_i V_j / X_{ij}$) of extra-high-voltage 
 \footnotesize
 \caption{Taxonomy of Global Numerical Linear Algebra (NLA) and Robust Synchrophasor State Estimation Frameworks}
 \label{tab:taxonomy}
-\begin{tabular}{p{3.6cm}p{5.2cm}p{8.0cm}}
+\resizebox{\columnwidth}{!}{\begin{tabular}{p{3.6cm}p{5.2cm}p{8.0cm}}
 \toprule
 \textbf{Research Group / Paradigm} & \textbf{Core Mathematical Mechanism} & \textbf{Capabilities and Limitations Relative to Proposed Framework} \\
 \midrule
@@ -91,7 +91,7 @@ Due to the high electrical stiffness ($V_i V_j / X_{ij}$) of extra-high-voltage 
 \addlinespace[2pt]
 \textbf{Northeastern, ETH Zurich \& Tsinghua} (Abur, Hug \emph{et al.} \cite{abur2004power,gol2014lav,huber1981robust}) & Least Absolute Value (LAV) linear programming, Huber M-estimation, and semidefinite convex relaxations. & High statistical breakdown point against gross leverage outliers; lacks closed-form UTC reference restoration under majority clock spoofing. \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
 
 Recently, Badugu, Navalkar, and Soman \cite{badugu2026synchrophasor} proposed a hybrid estimator that monitors the subspace Principal Angle (PA) \cite{raju2023mitigation,golub1996matrix} of the complex measurement vector and switches from complex Linear State Estimation (LSE) \cite{phadke1986state} to a scalar Nonlinear Least Squares (NLS) estimator \cite{pandian1999towards} using spoofing-invariant quantities $(|V_i|, P_{ij}, Q_{ij})$, subsequently restoring the global UTC phase reference $\Delta$ via 1D DBSCAN clustering \cite{ester1996density}. While representing an important milestone, we prove in this paper that memoryless scalar NLS + 1D DBSCAN architectures suffer from four fundamental vulnerabilities:
@@ -332,7 +332,7 @@ w_{k,t}^{\mathrm{trust}} = \exp\left(-\frac{1}{2}\left(d_{M,k}^2 - d_{M,\min}^2\
 \footnotesize
 \caption{Algorithm 1: Online Zero-Allocation Fused 6D Robust DSE Step}
 \label{tab:algo1}
-\begin{tabular}{p{8.3cm}}
+\resizebox{\columnwidth}{!}{\begin{tabular}{p{8.3cm}}
 \toprule
 \textbf{Input:} Phasor snapshot $z_t \in \mathbb{C}^m$, frequency/ROCOF $(f_t^{\mathrm{PMU}}, \mathrm{ROCOF}_t^{\mathrm{PMU}})$, sparse CSR factors $(H^H W^{-1}, R^H, R)$, historical state $(\hat{v}_{t-1}^{\mathrm{clean}}, \hat{f}_{t-1}^{\mathrm{clean}})$. \\
 \textbf{Output:} UTC-aligned state $\hat{v}_t^{\mathrm{aligned}} \in \mathbb{C}^{N_b}$, spoofing vector $\hat{\psi}_t \in \mathbb{R}^{N_p}$. \\
@@ -354,7 +354,7 @@ w_{k,t}^{\mathrm{trust}} = \exp\left(-\frac{1}{2}\left(d_{M,k}^2 - d_{M,\min}^2\
 15: Select $c^* = \arg\max_c \sum_{k \in C_c} w_{k,t}^{\mathrm{trust}}$; compute $\hat{\Delta}_t$ as weighted median on $C_{c^*}$. \\
 16: Align $\hat{v}_t^{\mathrm{aligned}} \gets \hat{v}_t^{\mathrm{rob}}e^{j\hat{\Delta}_t}$; set $\hat{\psi}_{k,t} = \mathrm{wrap}(\delta_{\mathrm{diff},k} - \hat{\Delta}_t)$ for $k \notin C_{c^*}$ with $r_{k,t}^{\mathrm{ADC}} < 0.05$ (orthogonally masking FDIA/ADC buses). \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 Table~\ref{tab:algo1} details the complete online execution pipeline of the proposed estimator.
@@ -379,14 +379,14 @@ In continental interconnections (e.g., $N_b = 10,000$ buses, $N_p = 3,000$ PMUs)
 \footnotesize
 \caption{Canonical MATPOWER Network Topology, Observability Verification, and Sparse Factor Characteristics}
 \label{tab:topology}
-\begin{tabular}{lccccccccc}
+\resizebox{\columnwidth}{!}{\begin{tabular}{lccccccccc}
 \toprule
 \textbf{Test System} & \textbf{Buses ($N_b$)} & \textbf{Branches ($N_l$)} & \textbf{Slack Bus ($s_{\mathrm{ref}}$)} & \textbf{PMUs ($N_p$)} & \textbf{Phasors ($m$)} & \textbf{Observability $\mathrm{rank}(H)$} & \textbf{$G_{\mathrm{red}}$ Components} & \textbf{Sparse $\mathrm{nnz}(R) / N_b^2$} & \textbf{PA Threshold ($\rho_{\mathrm{PA}}$)} \\
 \midrule
 \textbf{IEEE 30-Bus} (\texttt{case\_ieee30}) & 30 & 41 & Bus 1 (Idx 0) & 13 & 58 & $30 / 30$ (Full) & 1 (Connected) & $151 / 900$ ($16.8\%$) & $0.1443^\circ$ \\
 \textbf{IEEE 118-Bus} (\texttt{case118}) & 118 & 186 & Bus 69 (Idx 68) & 54 & 276 & $118 / 118$ (Full) & 1 (Connected) & $997 / 13,924$ ($7.2\%$) & $0.1107^\circ$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
 
 \section{Experimental Evaluation and Case Studies}
@@ -408,7 +408,7 @@ All estimators are compiled to native LLVM machine code via Numba \texttt{@njit(
 \footnotesize
 \caption{Comparative Performance Across Five Dynamic Regimes on Canonical IEEE 30-Bus and IEEE 118-Bus Systems}
 \label{tab:main_results}
-\begin{tabular}{lcccccccc}
+\resizebox{\columnwidth}{!}{\begin{tabular}{lcccccccc}
 \toprule
 & \multicolumn{4}{c}{\textbf{Canonical IEEE 30-Bus System ($N_p = 13, m = 58$)}} & \multicolumn{4}{c}{\textbf{Canonical IEEE 118-Bus System ($N_p = 54, m = 276$)}} \\
 \cmidrule(lr){2-5} \cmidrule(lr){6-9}
@@ -420,7 +420,7 @@ All estimators are compiled to native LLVM machine code via Numba \texttt{@njit(
 \textbf{R4: Simultaneous GSA + FDIA/ADC} & $8.490\%$ & $7.303\%$ & $\mathbf{0.180\%}$ & $\mathbf{0.0544^\circ}$ & $3.108\%$ & $1.614\%$ & $\mathbf{0.112\%}$ & $\mathbf{0.0763^\circ}$ \\
 \textbf{R5: Slow Ramp Meaconing GSA} & $1.165\%$ & $0.130\%$ & $\mathbf{0.130\%}$ & $\mathbf{0.0655^\circ}$ & $0.405\%$ & $0.074\%$ & $\mathbf{0.095\%}$ & $\mathbf{0.0713^\circ}$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
 
 \subsection{Case Study A: Multi-Regime Trajectory and Sub-Degree GSA Analysis}
@@ -456,7 +456,7 @@ In Regime~4 ($3.0\text{--}4.0\text{~s}$), simultaneous $+5.0^\circ$ spoofing on 
 \caption{Detection and Mitigation of Stealthy Column-Space FDIA ($a_t = H c_t$) Combined with GSA on IEEE 30-Bus System}
 \label{tab:stealthy_fdia}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{lccccc}
+\resizebox{\columnwidth}{!}{\begin{tabular}{lccccc}
 \toprule
 \textbf{Attack Scenario} & \textbf{$\theta_{\mathrm{PA}}$ (deg)} & \textbf{$\max |r^{\mathrm{kin}-\delta}|$} & \textbf{LSE TVE} & \textbf{Badugu \cite{badugu2026synchrophasor}} & \textbf{Proposed TVE} \\
 \midrule
@@ -464,7 +464,7 @@ No Attack Baseline & $0.113^\circ$ & $0.042^\circ$ & $0.114\%$ & $0.114\%$ & $\m
 Stealthy FDIA ($a_t = H c_t$) & $0.109^\circ$ & $4.850^\circ$ & $5.140\%$ & $5.140\%$ & $\mathbf{0.162\%}$ \\
 Stealthy FDIA + $+5^\circ$ GSA & $1.624^\circ$ & $5.020^\circ$ & $8.920\%$ & $5.150\%$ & $\mathbf{0.185\%}$ \\
 \bottomrule
-\end{tabular}%
+\end{tabular}}%
 }
 \end{table}
 
@@ -474,14 +474,14 @@ Stealthy FDIA + $+5^\circ$ GSA & $1.624^\circ$ & $5.020^\circ$ & $8.920\%$ & $5.
 \caption{Per-Snapshot Execution Latency Comparison (Milliseconds)}
 \label{tab:latency}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{lccccc}
+\resizebox{\columnwidth}{!}{\begin{tabular}{lccccc}
 \toprule
 \textbf{Test Grid} & \textbf{RSDMC \cite{chauhan2021synchrophasor}} & \textbf{SECF \cite{desilva2021pmu}} & \textbf{Badugu \cite{badugu2026synchrophasor}} & \textbf{Prop. (Attack)} & \textbf{Prop. (Clean)} \\
 \midrule
 \textbf{IEEE 30-Bus} & $4.14\text{--}11.57$ & $0.05\text{--}1.16$ & $0.53\text{--}2.33$ & $\mathbf{0.3616}$ & $\mathbf{0.0298}$ \\
 \textbf{IEEE 118-Bus} & $77.5\text{--}301.4$ & $1389\text{--}1738$ & $6.14\text{--}7.37$ & $\mathbf{5.8649}$ & $\mathbf{0.0473}$ \\
 \bottomrule
-\end{tabular}%
+\end{tabular}}%
 }
 \end{table}
 
