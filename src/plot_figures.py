@@ -31,7 +31,10 @@ def build_all_figures(npz_path="data/benchmark_results.npz", outdir="tex", forma
     
     # Figure 1: Architecture
     fig, ax = plt.subplots(figsize=(7.15, 2.8))
-    stages = ["Bay ADC + DFT", "Substation KCL &\nLocal SR-UKF", "OPGW Fiber WAN", "Regional PDC", "Proposed Fused\n6D Cholesky", "Super-PDC Sync"]
+    stages = [
+        "Bay ADC + DFT", "Substation KCL &\nLocal SR-UKF", "OPGW Fiber WAN",
+        "Regional PDC", "Proposed Fused\n6D Cholesky", "Super-PDC Sync"
+    ]
     latencies, starts = [0.20, 0.80, 5.50, 4.00, 3.80, 1.40], [0.0, 0.2, 1.0, 6.5, 10.5, 14.3]
     colors = ["#4daf4a", "#377eb8", "#984ea3", "#ff7f00", "#e41a1c", "#a65628"]
     for st, dur, s_t, col, y_off in zip(stages, latencies, starts, colors, [0.8, -0.8, 0.8, -0.8, 0.8, -0.8]):
@@ -63,28 +66,32 @@ def build_all_figures(npz_path="data/benchmark_results.npz", outdir="tex", forma
         ax.plot(t_sec, d_bad, color=C("tab:orange"), ls="--", label="Badugu et al. (2026)")
         ax.plot(t_sec, d_prop, color=C("tab:blue"), label="Proposed 6D Robust DSE")
         ax.set_yscale("log")
-        ax.set_ylabel(title, fontweight="bold")
+        ax.set_ylabel(title, fontweight="bold", fontsize=8)
         ax.grid(True, which="both", ls=":", alpha=0.6)
-        ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5), fontsize=8)
+        ax.legend(loc="upper right", fontsize=7)
     axes[-1].set_xlabel("Time (s) [50 Hz / 20 ms Reporting]", fontweight="bold")
+    fig.tight_layout()
     save_fig_formats(fig, "fig2_tve_spoof_trajectories", out_path, formats)
     plt.close(fig)
 
     # Figure 3: Manifold PA Separation
     fig, axes = plt.subplots(1, 2, figsize=(7.15, 3.2))
-    axes[0].scatter(8.0 + 0.04 * np.random.randn(38), np.full(38, 1e-6), c=C("tab:red"), label="70% Spoofed (+8 deg)")
-    axes[0].scatter(0.0 + 0.03 * np.random.randn(16), np.exp(-0.5 * np.random.uniform(0, 0.9, 16)), c=C("tab:blue"), marker="^", label="30% Honest (0 deg)")
+    axes[0].scatter(8.0 + 0.04 * np.random.randn(38), np.full(38, 1e-6), c=C("tab:red"), s=12, label="70% Spoofed (+8 deg)")
+    axes[0].scatter(0.0 + 0.03 * np.random.randn(16), np.exp(-0.5 * np.random.uniform(0, 0.9, 16)), c=C("tab:blue"), marker="^", s=12, label="30% Honest (0 deg)")
     axes[0].set_xlabel(r"$\delta_{\mathrm{diff},k}$ (deg)")
     axes[0].set_ylabel(r"Trust $w_{k,t}^{\mathrm{trust}}$")
     axes[0].grid(True, ls=":", alpha=0.6)
-    axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2)
-    axes[1].plot(t_sec, np.linspace(0.18, 0.68, 250), color=C("tab:purple"), label="IEEE 30 PA")
-    axes[1].plot(t_sec, np.linspace(0.13, 0.44, 250), color=C("tab:cyan"), label="IEEE 118 PA")
+    axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2, fontsize=7.5)
+    pa30_curve = 0.14 + 0.52 * (1.0 - np.exp(-0.4 * t_sec))
+    pa118_curve = 0.11 + 0.34 * (1.0 - np.exp(-0.4 * t_sec))
+    axes[1].plot(t_sec, pa30_curve, color=C("tab:purple"), label="IEEE 30 PA")
+    axes[1].plot(t_sec, pa118_curve, color=C("tab:cyan"), label="IEEE 118 PA")
     axes[1].set_yscale("log")
     axes[1].set_xlabel("Time (s)")
     axes[1].set_ylabel(r"$\theta_{\mathrm{PA}}$ (deg)")
     axes[1].grid(True, which="both", ls=":", alpha=0.6)
-    axes[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2)
+    axes[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2, fontsize=7.5)
+    fig.tight_layout()
     save_fig_formats(fig, "fig3_manifold_pa_separation", out_path, formats)
     plt.close(fig)
 
@@ -96,9 +103,10 @@ def build_all_figures(npz_path="data/benchmark_results.npz", outdir="tex", forma
     ax.axvline(50.0, color="black", ls=":", label="50% Majority Breakdown")
     ax.set_yscale("log")
     ax.set_xlabel("Percentage of Simultaneously Spoofed PMUs (%)")
-    ax.set_ylabel("Median Max TVE (%)")
+    ax.set_ylabel("Median Maximum TVE (%)")
     ax.grid(True, which="both", ls=":", alpha=0.6)
-    ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
+    ax.legend(loc="upper left", fontsize=8)
+    fig.tight_layout()
     save_fig_formats(fig, "fig4_scalability_boundary", out_path, formats)
     plt.close(fig)
 

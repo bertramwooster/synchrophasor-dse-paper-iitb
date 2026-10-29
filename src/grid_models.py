@@ -3,7 +3,7 @@ import subprocess
 import numpy as np
 import scipy.linalg as la
 import scipy.sparse as sp
-from scipy.sparse.csgraph import connected_components
+from scipy.sparse.csgraph import connected_components, reverse_cuthill_mckee
 
 # Auto-install pandapower to survive runtime restarts
 try:
@@ -61,6 +61,7 @@ class CanonicalIEEEGrid:
         self.Ybus, self.Yf, self.Yt = Ybus_sp.toarray(), Yf_sp.toarray(), Yt_sp.toarray()
 
         self.bus_type = np.real(bus_mat[:, 1]).astype(int)
+        self.slack_idx = int(np.where(self.bus_type == 3)[0][0])
         self.Pd0 = np.real(bus_mat[:, 2]) / self.baseMVA
         self.Qd0 = np.real(bus_mat[:, 3]) / self.baseMVA
         self.Vm0 = net.res_bus["vm_pu"].to_numpy(dtype=np.float64)
@@ -131,7 +132,60 @@ class CanonicalIEEEGrid:
         self.ym_re = np.ascontiguousarray(self.meas_y_mut[self.i_meas_idx].real, dtype=np.float64)
         self.ym_im = np.ascontiguousarray(self.meas_y_mut[self.i_meas_idx].imag, dtype=np.float64)
         self.w_vm_base = np.ascontiguousarray(1.0 / self.meas_sigma[self.v_meas_idx], dtype=np.float64)
-        self.w_pq_base = np.ascontiguousarray(1.0 / (self.meas_sigma[self.i_meas_idx] * 1.05), dtype=np.float64)
+
+        # First-order heteroscedastic variance propagation for scalar branch flows S_ij = V_i * conj(I_ij)
+        z0_exact = self.H @ self.V0_complex
+        vm0_par = np.abs(z0_exact[self.i_parent_v_idx])
+        im0_br = np.abs(z0_exact[self.i_meas_idx])
+        sig_i_arr = self.meas_sigma[self.i_meas_idx]
+        sig_v_arr = self.meas_sigma[self.i_parent_v_idx]
+        sigma_pq = np.sqrt((vm0_par ** 2) * (sig_i_arr ** 2) + (im0_br ** 2) * (sig_v_arr ** 2))
+        self.w_pq_base = np.ascontiguousarray(1.0 / sigma_pq, dtype=np.float64)
+
+        # Precompute Reverse Cuthill-McKee (RCM) ordering and static symbolic Cholesky elimination pattern
+        n_states = 2 * self.nb - 1
+        adj_g = np.eye(n_states, dtype=np.int8)
+        for k in range(len(self.i_meas_idx)):
+            bi, bj = int(self.bi_arr[k]), int(self.bj_arr[k])
+            loc = []
+            if bi > 0: loc.append(bi - 1)
+            if bj > 0: loc.append(bj - 1)
+            loc.append((self.nb - 1) + bi)
+            loc.append((self.nb - 1) + bj)
+            for ua in loc:
+                for ub in loc:
+                    adj_g[ua, ub] = 1
+
+        perm = reverse_cuthill_mckee(sp.csr_matrix(adj_g), symmetric_mode=True)
+        self.perm = np.ascontiguousarray(perm, dtype=np.int64)
+        inv_perm = np.empty(n_states, dtype=np.int64)
+        inv_perm[self.perm] = np.arange(n_states, dtype=np.int64)
+        self.inv_perm = np.ascontiguousarray(inv_perm, dtype=np.int64)
+
+        l_pat = np.zeros((n_states, n_states), dtype=bool)
+        for r in range(n_states):
+            for c in range(n_states):
+                if adj_g[r, c] != 0:
+                    pr, pc = int(self.inv_perm[r]), int(self.inv_perm[c])
+                    if pr > pc:
+                        l_pat[pr, pc] = True
+
+        sym_nz_idx = np.zeros((n_states, n_states), dtype=np.int64)
+        sym_nz_cnt = np.zeros(n_states, dtype=np.int64)
+        for k in range(n_states):
+            rows = np.where(l_pat[k + 1:, k])[0] + (k + 1)
+            cnt = len(rows)
+            sym_nz_cnt[k] = cnt
+            sym_nz_idx[k, :cnt] = rows
+            for a in range(cnt):
+                r = rows[a]
+                for b in range(a):
+                    c = rows[b]
+                    l_pat[r, c] = True
+
+        self.sym_nz_idx = np.ascontiguousarray(sym_nz_idx, dtype=np.int64)
+        self.sym_nz_cnt = np.ascontiguousarray(sym_nz_cnt, dtype=np.int64)
+        self.nnz_L = int(np.sum(sym_nz_cnt) + n_states)
 
         self.W_inv_sqrt = np.ascontiguousarray(1.0 / self.meas_sigma, dtype=np.float64)
         W_diag = self.W_inv_sqrt ** 2
@@ -156,7 +210,7 @@ class CanonicalIEEEGrid:
     def solve_ac_power_flow(self, Pd: np.ndarray, Qd: np.ndarray, Pg: np.ndarray, v_init: np.ndarray, coi_angle_rad: float = 0.0) -> np.ndarray:
         V = v_init.copy()
         Vm, Va = np.abs(V), np.angle(V)
-        slack_idx = int(np.where(self.bus_type == 3)[0][0])
+        slack_idx = self.slack_idx
         Va[slack_idx] = self.Va0[slack_idx] + coi_angle_rad
         pv_buses = np.where(self.bus_type == 2)[0]
         pq_buses = np.where(self.bus_type == 1)[0]

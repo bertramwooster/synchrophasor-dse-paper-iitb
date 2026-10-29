@@ -53,18 +53,11 @@ def jit_sparse_spd_cholesky_solve(
         l_kk = np.sqrt(diag_val)
         JTJ[k, k] = l_kk
         inv_lkk = 1.0 / l_kk
-        cnt = 0
-        for i in range(k + 1, n_states):
-            val = JTJ[i, k]
-            if val != 0.0:
-                val *= inv_lkk
-                JTJ[i, k] = val
-                col_nz_idx[k, cnt] = i
-                cnt += 1
-        col_nz_cnt[k] = cnt
+        cnt = col_nz_cnt[k]
         for a in range(cnt):
             r = col_nz_idx[k, a]
-            l_rk = JTJ[r, k]
+            l_rk = JTJ[r, k] * inv_lkk
+            JTJ[r, k] = l_rk
             for b in range(a + 1):
                 c = col_nz_idx[k, b]
                 JTJ[r, c] -= l_rk * JTJ[c, k]
@@ -92,7 +85,8 @@ def jit_solve_scalar_nls_sparse(
     w_vm_eff_base: np.ndarray, w_pq_eff_base: np.ndarray, pmu_buses: np.ndarray,
     bi_arr: np.ndarray, bj_arr: np.ndarray, ys_re: np.ndarray, ys_im: np.ndarray,
     ym_re: np.ndarray, ym_im: np.ndarray, v_warm: np.ndarray, nb: int,
-    robust_huber: bool, max_iter: int, ws_x_curr: np.ndarray, ws_w_irls_sq: np.ndarray,
+    robust_huber: bool, max_iter: int, inv_perm: np.ndarray,
+    ws_x_curr: np.ndarray, ws_w_irls_sq: np.ndarray,
     ws_va: np.ndarray, ws_vm: np.ndarray, ws_v_re: np.ndarray, ws_v_im: np.ndarray,
     ws_JTJ: np.ndarray, ws_JTr: np.ndarray, ws_dx: np.ndarray, ws_col_nz_idx: np.ndarray,
     ws_col_nz_cnt: np.ndarray, ws_idx_u: np.ndarray, ws_jp_u: np.ndarray, ws_jq_u: np.ndarray,
@@ -123,14 +117,16 @@ def jit_solve_scalar_nls_sparse(
             ws_v_re[k] = mag * np.cos(ang)
             ws_v_im[k] = mag * np.sin(ang)
 
-        for r in range(n_states):
-            ws_JTr[r] = 0.0
-            for c in range(r + 1): ws_JTJ[r, c] = 0.0
-            ws_JTJ[r, r] = 1e-9
+        for k in range(n_states):
+            ws_JTr[k] = 0.0
+            ws_JTJ[k, k] = 1e-9
+            cnt = ws_col_nz_cnt[k]
+            for a in range(cnt):
+                ws_JTJ[ws_col_nz_idx[k, a], k] = 0.0
 
         for k in range(n_v):
             b_idx = pmu_buses[k]
-            v_col = (nb - 1) + b_idx
+            v_col = inv_perm[(nb - 1) + b_idx]
             wb = w_vm_eff_base[k]
             w_sq = (wb * wb) * ws_w_irls_sq[k]
             diff_v = ws_vm[b_idx] - vm_target[k]
@@ -176,15 +172,15 @@ def jit_solve_scalar_nls_sparse(
 
             n_loc = 0
             if bi > 0:
-                ws_idx_u[n_loc], ws_jp_u[n_loc], ws_jq_u[n_loc] = bi - 1, -tm_i, tm_r
+                ws_idx_u[n_loc], ws_jp_u[n_loc], ws_jq_u[n_loc] = inv_perm[bi - 1], -tm_i, tm_r
                 n_loc += 1
             if bj > 0:
-                ws_idx_u[n_loc], ws_jp_u[n_loc], ws_jq_u[n_loc] = bj - 1, tm_i, -tm_r
+                ws_idx_u[n_loc], ws_jp_u[n_loc], ws_jq_u[n_loc] = inv_perm[bj - 1], tm_i, -tm_r
                 n_loc += 1
 
-            ws_idx_u[n_loc], ws_jp_u[n_loc], ws_jq_u[n_loc] = (nb - 1) + bi, dP_dvmi, dQ_dvmi
+            ws_idx_u[n_loc], ws_jp_u[n_loc], ws_jq_u[n_loc] = inv_perm[(nb - 1) + bi], dP_dvmi, dQ_dvmi
             n_loc += 1
-            ws_idx_u[n_loc], ws_jp_u[n_loc], ws_jq_u[n_loc] = (nb - 1) + bj, dP_dvmj, dQ_dvmj
+            ws_idx_u[n_loc], ws_jp_u[n_loc], ws_jq_u[n_loc] = inv_perm[(nb - 1) + bj], dP_dvmj, dQ_dvmj
             n_loc += 1
 
             wp_dp, wq_dq = wp_sq * dp, wq_sq * dq
@@ -200,9 +196,9 @@ def jit_solve_scalar_nls_sparse(
         jit_sparse_spd_cholesky_solve(ws_JTJ, ws_JTr, ws_dx, ws_col_nz_idx, ws_col_nz_cnt, n_states)
 
         max_dx = 0.0
-        for s_idx in range(n_states):
-            step_val = ws_dx[s_idx]
-            ws_x_curr[s_idx] += step_val
+        for s_orig in range(n_states):
+            step_val = ws_dx[inv_perm[s_orig]]
+            ws_x_curr[s_orig] += step_val
             abs_step = abs(step_val)
             if abs_step > max_dx: max_dx = abs_step
 

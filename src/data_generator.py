@@ -82,8 +82,9 @@ def generate_dynamic_tape(sys_model: CanonicalIEEEGrid, n_steps: int = 250, seed
                 if len(i_indices) > 0: z_att[i_indices[0]] *= 0.65 * np.exp(-1j * np.deg2rad(18.0))
 
         elif t >= 200:
+            n_maj = int(np.ceil(0.70 * n_pmu))
             drift_deg = 0.45 + 2.50 * ((t - 200) * dt)
-            for p_idx in [0, 3, 8, 10]:
+            for p_idx in range(n_maj):
                 spoof_deg[p_idx] = drift_deg
                 f_rep[p_idx] += np.deg2rad(2.50) / TWO_PI
                 rocof_rep[p_idx] += 0.12
