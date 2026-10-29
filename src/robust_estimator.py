@@ -135,9 +135,6 @@ def jit_step_proposed_robust(
         prop_anchor_state[1] = 0.0
         return
 
-    anchor_coi_int = prop_anchor_state[1] + d_ang_coi
-    prop_anchor_state[1] = anchor_coi_int
-
     jit_solve_scalar_nls_sparse(
         ws_vm_target, ws_p_target, ws_q_target, ws_w_vm_eff, ws_w_pq_eff,
         pmu_buses, bi_arr, bj_arr, ys_re, ys_im, ym_re, ym_im, prop_v_clean, nb, True, 4, inv_perm,
@@ -147,7 +144,6 @@ def jit_step_proposed_robust(
 
     ang_clean_slack = np.angle(prop_v_clean[slack_idx])
     ang_rob_slack = np.angle(ws_v_rob[slack_idx])
-    ang_anchor_slack = prop_anchor_state[0]
 
     min_mahal_sq = 1e30
     for p_idx in range(n_pmu):
@@ -160,16 +156,11 @@ def jit_step_proposed_robust(
         d_theta_phys_rel = wrap_rad(ang_rob_rel - ang_prev_rel)
         ang_pred_step = prop_va_pmu_clean[p_idx] + d_theta_phys_rel + d_ang_coi
 
-        ang_anc_rel = wrap_rad(prop_anchor_va_pmu[p_idx] - ang_anchor_slack)
-        d_theta_phys_anc = wrap_rad(ang_rob_rel - ang_anc_rel)
-        ang_pred_anc = prop_anchor_va_pmu[p_idx] + d_theta_phys_anc + anchor_coi_int
-
         ang_raw = ws_ang_pmu_raw[p_idx]
         ws_delta_diff_deg[p_idx] = wrap_rad(ang_raw - ang_rob_p) * RAD2DEG
 
-        r_kin_step = abs(wrap_rad(ang_raw - ang_pred_step)) * RAD2DEG
-        r_kin_anc = abs(wrap_rad(ang_raw - ang_pred_anc)) * RAD2DEG
-        r_kin_deg = r_kin_step if r_kin_step >= r_kin_anc else r_kin_anc
+        # Single-step slack-anchored UTC predictor (free of multi-second open-loop integration drift)
+        r_kin_deg = abs(wrap_rad(ang_raw - ang_pred_step)) * RAD2DEG
 
         r_mag_v = abs(ws_vm_pmu_raw[p_idx] - vm_rob_p)
         f_phys_p = f_coi_est + d_theta_phys_rel * inv_two_pi_dt
@@ -177,7 +168,7 @@ def jit_step_proposed_robust(
         r_swing = abs(f_meas_t[p_idx] - f_phys_p) + 0.05 * abs(rocof_meas_t[p_idx] - rocof_phys_p)
         r_adc, r_dsp = ws_r_adc_fdia[p_idx], ws_r_dsp_f[p_idx]
 
-        q1, q2, q3, q4, q5 = r_kin_deg / 0.22, r_adc / 0.04, r_mag_v / 0.006, r_dsp / 0.08, r_swing / 0.04
+        q1, q2, q3, q4, q5 = r_kin_deg / 0.12, r_adc / 0.04, r_mag_v / 0.006, r_dsp / 0.08, r_swing / 0.04
         mahal_sq = q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4 + q5 * q5
         ws_sub_vals[p_idx] = mahal_sq
         if mahal_sq < min_mahal_sq:
@@ -222,7 +213,7 @@ def jit_step_proposed_robust(
         else:
             est_spoof_deg_out[p_idx] = wrap_deg(ws_delta_diff_deg[p_idx] - delta_corr_deg)
 
-        if ws_trust_weights[p_idx] > 0.3:
+        if (ws_labels[p_idx] == best_cluster) and (ws_r_adc_fdia[p_idx] < 0.05):
             f_upd = 0.7 * prop_f_clean[p_idx] + 0.3 * f_meas_t[p_idx]
             prop_f_clean[p_idx] = f_upd
             ws_sub_vals[trusted_cnt] = f_upd
@@ -231,4 +222,5 @@ def jit_step_proposed_robust(
     if trusted_cnt > 0:
         med_trusted_f = jit_median_1d(ws_sub_vals, ws_med_buf, trusted_cnt)
         for p_idx in range(n_pmu):
-            if ws_trust_weights[p_idx] <= 0.3: prop_f_clean[p_idx] = med_trusted_f
+            if (ws_labels[p_idx] != best_cluster) or (ws_r_adc_fdia[p_idx] >= 0.05):
+                prop_f_clean[p_idx] = med_trusted_f
