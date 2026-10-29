@@ -67,7 +67,7 @@ Data integrity attacks on synchrophasor streams are categorized into three prima
 
 Due to the high electrical stiffness ($V_i V_j / X_{ij}$) of extra-high-voltage transmission lines, even sub-degree phase angle errors severely distort estimated power flows \cite{kundur1994power,badugu2026synchrophasor}. On a $765\text{~kV}$, $200\text{~km}$ line, a $1^\circ$ phase bias alters estimated active power flow by $\approx 154\text{~MW}$ \cite{kundur1994power}. While localized RF/signal-level spoofing detectors \cite{wei2022exploiting,bose2022gps} require hardware retrofits at every remote substation, centralized state-estimation-based algorithms---such as Residual-based Spoofing Detection and Measurement Correction (RSDMC) \cite{chauhan2021synchrophasor}, sparse phase-bias recovery \cite{fan2018synchrophasor,fan2018closed,zhang2020attack}, and the Sparse Error Correction Framework (SECF) \cite{desilva2021pmu}---rely on iterative optimization routines whose execution time grows super-linearly with system size and number of spoofed PMUs (exceeding $1.7\text{~s}$ on the IEEE 118-bus system \cite{desilva2021pmu,badugu2026synchrophasor}).
 
-\begin{table*}[t]
+\begin{table*}[!t]
 \centering
 \footnotesize
 \caption{Taxonomy of Global Numerical Linear Algebra (NLA) and Robust Synchrophasor State Estimation Frameworks}
@@ -231,14 +231,14 @@ Then the scalar voltage magnitude squared and complex branch power flow become:
 \end{proposition}
 Equations (\ref{eq:corrupt_vm})--(\ref{eq:corrupt_sij}) prove that $e^{j\psi_i}$ no longer cancels in scalar coordinates. Because unweighted $\ell_2$ NLS has a $0\%$ breakdown point \cite{huber1981robust,gol2014lav}, a single corrupted substation smears dense estimation errors across the entire grid.
 
-\begin{figure*}[t]
+\section{Proposed Zero-Allocation Fused 6D Robust DSE Architecture}
+
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.96\textwidth]{fig1_architecture.pdf}
 \caption{Hierarchical 3-Tier WAMPAC cyber-physical deployment architecture and cumulative end-to-end wall-clock timing budget within the strict $20.0\text{~ms}$ IEEE Std C37.118.1 real-time reporting window ($50\text{~Hz}$).}
 \label{fig:arch}
 \end{figure*}
-
-\section{Proposed Zero-Allocation Fused 6D Robust DSE Architecture}
 
 \subsection{$\mathcal{O}(m)$ 4-Node Graph Accumulation and Sparse Huber Cholesky Solver}
 Let the scalar state vector be $x = [\theta_2, \dots, \theta_{N_b}, |V_1|, \dots, |V_{N_b}|]^T \in \mathbb{R}^{n_s}$, where $n_s = 2N_b - 1$ and Bus~1 is fixed as the local scalar slack reference ($\theta_1 = 0$). For each branch current measurement $k \in \{1, \dots, N_i\}$ connecting local PMU bus $i$ to neighbor bus $j$ with series-shunt self-admittance $y_{s,k} = g_{s,k} + j b_{s,k}$ and mutual admittance $y_{m,k} = g_{m,k} + j b_{m,k}$, define the complex mutual power term:
@@ -324,7 +324,7 @@ w_{k,t}^{\mathrm{trust}} = \exp\left(-\frac{1}{2}\left(d_{M,k}^2 - d_{M,\min}^2\
 \label{eq:trust_weight}
 \end{equation}
 
-\begin{table}[t]
+\begin{table}[!t]
 \centering
 \footnotesize
 \caption{Algorithm 1: Online Zero-Allocation Fused 6D Robust DSE Step}
@@ -364,14 +364,43 @@ In continental interconnections (e.g., $N_b = 10,000$ buses, $N_p = 3,000$ PMUs)
     \item \textbf{Tier 2 (National Super-PDC Coordinator, $14.3\text{--}15.7\text{~ms}$)}: Reconciles inter-regional boundary tie-line phase offsets $\delta\Delta_{mn} = \angle\hat{V}_b^{(m)} - \angle\hat{V}_b^{(n)}$ across shared boundary buses $b \in \mathcal{B}$ via a 25-node linear quotient-graph solve and Schur-complement update in $1.4\text{~ms}$, delivering the global 10,000-bus state at $15.7\text{~ms}$ ($4.3\text{~ms}$ safety margin).
 \end{enumerate}
 
-\begin{figure*}[t]
+\section{Experimental Evaluation and Case Studies}
+
+\subsection{Canonical MATPOWER Setup and Dynamic Tape Generation}
+
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.96\textwidth]{fig2_tve_spoof_trajectories.pdf}
 \caption{Comparative dynamic state estimation performance across 250 snapshots ($5.0\text{~s}$ at $50\text{~Hz}$) on canonical MATPOWER IEEE 30-bus (left) and IEEE 118-bus (right) networks across all five operational and multi-vector attack regimes: (Top) Maximum Total Vector Error (TVE \%); (Bottom) Maximum Spoofing Angle Estimation Error (deg).}
 \label{fig:trajectories}
 \end{figure*}
 
-\begin{table*}[t]
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig3_manifold_pa_separation.pdf}
+\caption{(Left) 6D Mahalanobis trust weight $w_{k,t}^{\mathrm{trust}}$ versus 1D angle difference $\delta_{\mathrm{diff},k}$ during Regime~3 ($70\%$ majority GSA $+ 18\%$ load step) on IEEE 118-bus; (Right) Subspace Principal Angle $\theta_{\mathrm{PA}}$ trajectories.}
+\label{fig:manifold}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig4_scalability_boundary.pdf}
+\caption{Median Maximum TVE (\%) on IEEE 118-bus as a function of the percentage of simultaneously spoofed PMUs ($10\%\text{ to }90\%$ coordinated $+8.0^\circ$ attack), illustrating the $50\%$ breakdown boundary of 1D DBSCAN \cite{badugu2026synchrophasor} versus the proposed 6D DSE-assisted estimator.}
+\label{fig:boundary}
+\end{figure}
+
+To ensure exact reproducibility, we import the unaltered MATPOWER \texttt{case\_ieee30} and \texttt{case118} test systems \cite{zimmerman2011matpower} via \texttt{pandapower} \cite{thurner2018pandapower} and extract the exact sparse nodal and branch admittance matrices $(Y_{\mathrm{bus}}, Y_f, Y_t)$. Table~\ref{tab:topology} summarizes the verified topological and sparse matrix properties. On IEEE 118-bus, the 54 PMUs from Table~I of \cite{badugu2026synchrophasor} yield $m = 276$ complex phasor channels, full rank $\mathrm{rank}(H) = 118$, a single connected component in $G_{\mathrm{red}}$, and $92.8\%$ sparsity in the upper-triangular QR factor $R$.
+
+All estimators are compiled to native LLVM machine code via Numba \texttt{@njit(fastmath=True)} \cite{lam2015numba} with pre-allocated workspace buffers. We generate a 250-snapshot ($5.0\text{~s}$ at $50\text{~Hz}$) dynamic synchrophasor tape incorporating a $+10\%$ continuous daily load ramp, Ornstein-Uhlenbeck stochastic load fluctuations ($\eta_t = 0.92\eta_{t-1} + 0.003\xi_t$), AGC governor droop, COI rotor swing dynamics (\ref{eq:coi_swing}), and Gaussian noise ($\sigma_V = 0.001\text{~pu}$, $\sigma_I = 0.002\text{~pu}$) across five regimes:
+\begin{itemize}
+    \item \textbf{Regime 1 ($0.0\text{--}1.0\text{~s}$, Steps 0--49)}: Clean dynamic load ramp and COI frequency drift.
+    \item \textbf{Regime 2 ($1.0\text{--}2.0\text{~s}$, Steps 50--99)}: Sub-degree minority GSA on PMU indices $\{1, 6, 9, 12\}$ with angles $\{+0.70^\circ, -0.80^\circ, -0.80^\circ, +0.90^\circ\}$ \cite{badugu2026synchrophasor}.
+    \item \textbf{Regime 3 ($2.0\text{--}3.0\text{~s}$, Steps 100--149)}: Sudden $+18\%$ active/reactive load step on major load buses coinciding with a $70\%$ coordinated majority GSA ($+8.00^\circ$ on 9/13 PMUs in IEEE 30-bus and 38/54 PMUs in IEEE 118-bus).
+    \item \textbf{Regime 4 ($3.0\text{--}4.0\text{~s}$, Steps 150--199)}: Simultaneous $+5.00^\circ$ GSA on PMU indices $\{2, 5, 9\}$ plus severe FDIA/ADC voltage and branch current corruption ($1.18 e^{j12^\circ}V_i$, $0.65 e^{-j18^\circ}I_{ij}$) on PMU indices $\{0, 3\}$.
+    \item \textbf{Regime 5 ($4.0\text{--}5.0\text{~s}$, Steps 200--249)}: Slow meaconing clock-drift ramp ($+2.50^\circ/\text{s}$ starting from $+0.45^\circ$) on PMU indices $\{0, 3, 8, 10\}$.
+\end{itemize}
+
+\begin{table*}[!t]
 \centering
 \footnotesize
 \caption{Canonical MATPOWER Network Topology, Observability Verification, and Sparse Factor Characteristics}
@@ -386,21 +415,7 @@ In continental interconnections (e.g., $N_b = 10,000$ buses, $N_p = 3,000$ PMUs)
 \end{tabular}
 \end{table*}
 
-\section{Experimental Evaluation and Case Studies}
-
-\subsection{Canonical MATPOWER Setup and Dynamic Tape Generation}
-To ensure exact reproducibility, we import the unaltered MATPOWER \texttt{case\_ieee30} and \texttt{case118} test systems \cite{zimmerman2011matpower} via \texttt{pandapower} \cite{thurner2018pandapower} and extract the exact sparse nodal and branch admittance matrices $(Y_{\mathrm{bus}}, Y_f, Y_t)$. Table~\ref{tab:topology} summarizes the verified topological and sparse matrix properties. On IEEE 118-bus, the 54 PMUs from Table~I of \cite{badugu2026synchrophasor} yield $m = 276$ complex phasor channels, full rank $\mathrm{rank}(H) = 118$, a single connected component in $G_{\mathrm{red}}$, and $92.8\%$ sparsity in the upper-triangular QR factor $R$.
-
-All estimators are compiled to native LLVM machine code via Numba \texttt{@njit(fastmath=True)} \cite{lam2015numba} with pre-allocated workspace buffers. We generate a 250-snapshot ($5.0\text{~s}$ at $50\text{~Hz}$) dynamic synchrophasor tape incorporating a $+10\%$ continuous daily load ramp, Ornstein-Uhlenbeck stochastic load fluctuations ($\eta_t = 0.92\eta_{t-1} + 0.003\xi_t$), AGC governor droop, COI rotor swing dynamics (\ref{eq:coi_swing}), and Gaussian noise ($\sigma_V = 0.001\text{~pu}$, $\sigma_I = 0.002\text{~pu}$) across five regimes:
-\begin{itemize}
-    \item \textbf{Regime 1 ($0.0\text{--}1.0\text{~s}$, Steps 0--49)}: Clean dynamic load ramp and COI frequency drift.
-    \item \textbf{Regime 2 ($1.0\text{--}2.0\text{~s}$, Steps 50--99)}: Sub-degree minority GSA on PMU indices $\{1, 6, 9, 12\}$ with angles $\{+0.70^\circ, -0.80^\circ, -0.80^\circ, +0.90^\circ\}$ \cite{badugu2026synchrophasor}.
-    \item \textbf{Regime 3 ($2.0\text{--}3.0\text{~s}$, Steps 100--149)}: Sudden $+18\%$ active/reactive load step on major load buses coinciding with a $70\%$ coordinated majority GSA ($+8.00^\circ$ on 9/13 PMUs in IEEE 30-bus and 38/54 PMUs in IEEE 118-bus).
-    \item \textbf{Regime 4 ($3.0\text{--}4.0\text{~s}$, Steps 150--199)}: Simultaneous $+5.00^\circ$ GSA on PMU indices $\{2, 5, 9\}$ plus severe FDIA/ADC voltage and branch current corruption ($1.18 e^{j12^\circ}V_i$, $0.65 e^{-j18^\circ}I_{ij}$) on PMU indices $\{0, 3\}$.
-    \item \textbf{Regime 5 ($4.0\text{--}5.0\text{~s}$, Steps 200--249)}: Slow meaconing clock-drift ramp ($+2.50^\circ/\text{s}$ starting from $+0.45^\circ$) on PMU indices $\{0, 3, 8, 10\}$.
-\end{itemize}
-
-\begin{table*}[t]
+\begin{table*}[!t]
 \centering
 \footnotesize
 \caption{Comparative Performance Across Five Dynamic Regimes on Canonical IEEE 30-Bus and IEEE 118-Bus Systems}
@@ -425,20 +440,6 @@ Table~\ref{tab:main_results} and Fig.~\ref{fig:trajectories} compare Standard Co
 
 At $t = 1.00\text{~s}$ (Regime~2 onset), Badugu \emph{et al.}'s persistence counter ($\mathrm{cnt\_max}=4$) causes an $80\text{~ms}$ TVE spike ($\RTwoLseThirty$ on IEEE 30-bus) and $0.90^\circ$ spoofing error before mitigation activates at $t = 1.08\text{~s}$ (visible as the orange spike at $t = 1.0\text{~s}$ in Fig.~\ref{fig:trajectories}). Our dual PA/kinematic trigger switches on Cycle~1 with zero lag, recovering all four sub-degree spoofing angles to within $\RTwoSpoofThirty$.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig3_manifold_pa_separation.pdf}
-\caption{(Left) 6D Mahalanobis trust weight $w_{k,t}^{\mathrm{trust}}$ versus 1D angle difference $\delta_{\mathrm{diff},k}$ during Regime~3 ($70\%$ majority GSA $+ 18\%$ load step) on IEEE 118-bus; (Right) Subspace Principal Angle $\theta_{\mathrm{PA}}$ trajectories.}
-\label{fig:manifold}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig4_scalability_boundary.pdf}
-\caption{Median Maximum TVE (\%) on IEEE 118-bus as a function of the percentage of simultaneously spoofed PMUs ($10\%\text{ to }90\%$ coordinated $+8.0^\circ$ attack), illustrating the $50\%$ breakdown boundary of 1D DBSCAN \cite{badugu2026synchrophasor} versus the proposed 6D DSE-assisted estimator.}
-\label{fig:boundary}
-\end{figure}
-
 \subsection{Case Study B: $70\%\text{--}90\%$ Coordinated Majority Spoofing Coinciding with $+18\%$ Load Step}
 In Regime~3 ($2.0\text{--}3.0\text{~s}$), $70\%$ of installed PMUs are simultaneously spoofed by $+8.00^\circ$ at the exact instant a $+18\%$ load step strikes the grid. Confirming Proposition~2, Badugu \emph{et al.}'s 1D DBSCAN selects the $70\%$ spoofed group as the dominant cluster, amplifying median Maximum TVE from $\RThreeLseThirty$ (LSE) to $\RThreeBaduguThirty$ on IEEE 30-bus and from $\RThreeLseOneEighteen$ (LSE) to $\RThreeBaduguOneEighteen$ on IEEE 118-bus.
 
@@ -447,7 +448,7 @@ Conversely, as shown in Fig.~\ref{fig:manifold} (left), our slack-anchored 6D Ma
 \subsection{Case Study C: Simultaneous GSA and FDIA/ADC Channel Corruption}
 In Regime~4 ($3.0\text{--}4.0\text{~s}$), simultaneous $+5.0^\circ$ spoofing on PMUs $\{2, 5, 9\}$ and FDIA/ADC voltage/current scaling ($1.18 e^{j12^\circ}V_i$, $0.65 e^{-j18^\circ}I_{ij}$) on PMUs $\{0, 3\}$ cause Badugu \emph{et al.}'s unweighted $\ell_2$ scalar NLS to diverge to $\RFourBaduguThirty$ TVE (IEEE 30-bus) and $\RFourBaduguOneEighteen$ TVE (IEEE 118-bus), while misattributing the $+12.0^\circ$ FDIA phase error as a GPS spoof (bottom panels of Fig.~\ref{fig:trajectories}). Our Stage~1 magnitude screen ($r_{k,t}^{\mathrm{ADC}}$), soft prior weighting, and Huber IRLS Cholesky solver suppress the corrupted leverage measurements, achieving $\RFourPropThirty$ TVE (IEEE 30-bus) and $\RFourPropOneEighteen$ TVE (IEEE 118-bus) while orthogonally separating FDIA/ADC faults from GPS spoofing ($\RFourSpoofThirty$ and $\RFourSpoofOneEighteen$ error).
 
-\begin{table}[t]
+\begin{table}[!t]
 \centering
 \footnotesize
 \caption{Detection and Mitigation of Stealthy Column-Space FDIA ($a_t = H c_t$) Combined with GSA on IEEE 30-Bus System}
@@ -465,7 +466,7 @@ Stealthy FDIA + $+5^\circ$ GSA & $\TabThreeCombPA$ & $\TabThreeCombKin$ & $\TabT
 }
 \end{table}
 
-\begin{table}[t]
+\begin{table}[!t]
 \centering
 \footnotesize
 \caption{Per-Snapshot Execution Latency Comparison (Milliseconds)}
