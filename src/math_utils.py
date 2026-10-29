@@ -48,7 +48,22 @@ def fast_1d_sort_cluster_inplace(angles_deg: np.ndarray, eps_deg: float, labels:
         if angles_deg[order[i]] - angles_deg[order[i - 1]] > eps_deg:
             cluster_id += 1
         labels[order[i]] = cluster_id
-    return cluster_id + 1
+    
+    n_clusters = cluster_id + 1
+    
+    # Theorem 1: S^1 Circular wrap-around check across the +/- 180 degree seam
+    wrap_gap = (angles_deg[order[0]] + 360.0) - angles_deg[order[n - 1]]
+    if n_clusters > 1 and wrap_gap <= eps_deg:
+        last_c = cluster_id
+        for i in range(n):
+            if labels[i] == last_c:
+                labels[i] = 0
+            elif labels[i] == 0:
+                # Unwrap the lower branch by +360 so cluster 0 is contiguous for median
+                angles_deg[i] += 360.0
+        n_clusters -= 1
+        
+    return n_clusters
 
 @njit(fastmath=True)
 def weighted_median_1d_subset(values: np.ndarray, weights: np.ndarray, order: np.ndarray, count: int) -> float:

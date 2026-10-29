@@ -22,25 +22,28 @@ def build_all_figures(npz_path="data/benchmark_results.npz", outdir="tex", forma
     out_path = Path(outdir)
     data = np.load(npz_path)
     t_sec = data["t_sec"]
-    
+
     plt.rcParams.update({
         "font.family": "serif", "font.size": 9, "axes.labelsize": 9,
         "legend.fontsize": 8, "pdf.fonttype": 42, "ps.fonttype": 42
     })
     C = lambda col: shift_hsv(col, 0, 1.0, 1.0)
-    
+
     # Figure 1: Architecture
     fig, ax = plt.subplots(figsize=(7.15, 2.8))
-    stages = [
-        "Bay ADC + DFT", "Substation KCL &\nLocal SR-UKF", "OPGW Fiber WAN",
-        "Regional PDC", "Proposed Fused\n6D Cholesky", "Super-PDC Sync"
-    ]
-    latencies, starts = [0.20, 0.80, 5.50, 4.00, 3.80, 1.40], [0.0, 0.2, 1.0, 6.5, 10.5, 14.3]
+    
+    # Safe list formatting to avoid Colab %%writefile escaping bugs
+    stages = ["Bay ADC + DFT", "Substation KCL &\nLocal SR-UKF", "OPGW Fiber WAN", "Regional PDC", "Proposed Fused\n6D Cholesky", "Super-PDC Sync"]
+    latencies = [0.20, 0.80, 5.50, 4.00, 3.80, 1.40]
+    starts = [0.0, 0.2, 1.0, 6.5, 10.5, 14.3]
     colors = ["#4daf4a", "#377eb8", "#984ea3", "#ff7f00", "#e41a1c", "#a65628"]
-    for st, dur, s_t, col, y_off in zip(stages, latencies, starts, colors, [0.8, -0.8, 0.8, -0.8, 0.8, -0.8]):
+    y_offs = [0.8, -0.8, 0.8, -0.8, 0.8, -0.8]
+    
+    for st, dur, s_t, col, y_off in zip(stages, latencies, starts, colors, y_offs):
         ax.barh(0, dur, left=s_t, height=0.4, color=C(col), edgecolor="black")
         ax.text(s_t + 0.5 * dur, y_off, st, ha="center", va="center", fontsize=7.5, fontweight="bold")
         ax.plot([s_t + 0.5 * dur, s_t + 0.5 * dur], [0.2 * np.sign(y_off), y_off - 0.15 * np.sign(y_off)], "k-", lw=0.5)
+        
     ax.axvline(20.0, color=C("red"), ls="--", lw=1.5)
     ax.text(19.8, 0.0, "20.0 ms IEEE C37.118.1 Limit", ha="right", va="center", color=C("red"), fontweight="bold")
     ax.set_xlim(0, 21.0)
